@@ -1,5 +1,6 @@
 main.c:66:6:HAL_ADC_ConvCpltCallback	16	static
-main.c:77:5:main	24	static,ignoring_inline_asm
-main.c:174:6:SystemClock_Config	88	static
-main.c:216:6:move_numbers	16	static
-main.c:252:6:Error_Handler	4	static,ignoring_inline_asm
+main.c:77:5:main	40	static
+main.c:148:6:SystemClock_Config	88	static
+main.c:190:6:read_adc	88	static,ignoring_inline_asm
+main.c:234:6:move_numbers	16	static
+main.c:259:6:Error_Handler	4	static,ignoring_inline_asm

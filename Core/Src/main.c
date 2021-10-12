@@ -53,14 +53,14 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+void read_adc();
 void move_numbers(uint32_t *numbers, uint8_t mode);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint32_t adc_result[11];
+
 uint32_t final_buffer[11] = {0};
-uint32_t adc_2_result[4] = {0};
 
 uint8_t adc_ready = 0;
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
@@ -119,49 +119,23 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  for(uint8_t mode = 0; mode < 2; mode++){
-		  adc_ready = 0;
-		  if(mode == 0) HAL_ADC_Start_IT(&hadc1);
-		  else 			HAL_ADC_Start_IT(&hadc2);
-
-		  if(mode == 0){
-			  for(uint8_t i = 0; i < 11; i++)
-			  {
-				HAL_ADC_PollForConversion(&hadc1, 100);
-				adc_result[i] = HAL_ADC_GetValue(&hadc1);
-
-				asm("NOP");
-			  }
-		  }
-		  else {
-			for(uint8_t i = 0; i < 4; i++){
-				HAL_ADC_PollForConversion(&hadc2, 100);
-				adc_2_result[i] = HAL_ADC_GetValue(&hadc2);
-			}
-		  }
-
-		  while(!adc_ready){
-			  int z = 0;
-			  z = z+1;
-		  }
-
-		  if(mode == 0) HAL_ADC_Stop(&hadc1);
-		  else 		    HAL_ADC_Stop(&hadc2);
-
-		  move_numbers(&adc_result[0], mode);
-	  }
+	  read_adc();
 
 	  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-//
-//	  for(uint8_t i = 0; i < 9; i++)
-//	  {
-//		  HAL_Delay(25);
-//		  uint8_t str[20];
-//		  sprintf((char*) str, "ADC%d: %d\t", i, (uint8_t*) adc_result[i]);
-//		  HAL_UART_Transmit(&huart1, str, 20, 100);
-//		  for(int index = 0; index < 20; index++){ str[index] = 0;}
-//	  }
-//	  HAL_UART_Transmit(&huart1, (uint8_t*) "\n", 2, 100);
+
+	  static uint32_t last_update = 0;
+	  if(HAL_GetTick() >= last_update + 100){
+		  for(uint8_t i = 0; i < 10; i++)
+		  {
+			  uint8_t str[20];
+			  sprintf((char*) str, "ADC%d: %d\t", i, (uint8_t*) final_buffer[i]);
+			  HAL_UART_Transmit(&huart1, str, 20, 100);
+			  for(int index = 0; index < 20; index++){ str[index] = 0;}
+		  }
+		  HAL_UART_Transmit(&huart1, (uint8_t*) "\n", 2, 100);
+		  last_update = HAL_GetTick();
+	  }
+
 	  HAL_Delay(100);
   }
   /* USER CODE END 3 */
@@ -213,9 +187,51 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-void move_numbers(uint32_t *numbers, uint8_t mode){
+void read_adc(){
 
-	//final_buffer[0] = adc_result[3];
+	uint32_t adc_1_values[11];
+	uint32_t adc_2_values[4] = {0};
+
+	for(uint8_t mode = 0; mode < 2; mode++){
+	  adc_ready = 0;
+	  if(mode == 0) HAL_ADC_Start_IT(&hadc1);
+	  else 			HAL_ADC_Start_IT(&hadc2);
+
+	  if(mode == 0){
+		  for(uint8_t i = 0; i < 11; i++)
+		  {
+			HAL_ADC_PollForConversion(&hadc1, 100);
+			adc_1_values[i] = HAL_ADC_GetValue(&hadc1);
+
+			asm("NOP");
+		  }
+	  }
+	  else {
+		for(uint8_t i = 0; i < 4; i++){
+			HAL_ADC_PollForConversion(&hadc2, 100);
+			adc_2_values[i] = HAL_ADC_GetValue(&hadc2);
+		}
+	  }
+
+	  // Wait until ADC convert is competed
+	  while(!adc_ready){
+		  int z = 0;
+		  z = z+1;
+	  }
+
+	  // Finally stop ADC convert as it's ready
+	  if(mode == 0){
+		  HAL_ADC_Stop(&hadc1);
+		  move_numbers(&adc_1_values[0], mode);
+	  }
+	  else{
+		  HAL_ADC_Stop(&hadc2);
+		  move_numbers(&adc_2_values[0], mode);
+	  }
+	}
+}
+
+void move_numbers(uint32_t *numbers, uint8_t mode){
 
 	if(mode == 0){
 		final_buffer[0] = numbers[6];
@@ -228,18 +244,9 @@ void move_numbers(uint32_t *numbers, uint8_t mode){
 		final_buffer[9] = numbers[2];
 	}
 	else{
-		final_buffer[6] = adc_2_result[0];
-		final_buffer[8] = adc_2_result[1];
+		final_buffer[6] = numbers[0];
+		final_buffer[8] = numbers[1];
 	}
-//	uint32_t buffer[9] = {0};
-//	buffer[0] = numbers[3];
-//	buffer[1] = numbers[0];
-//	buffer[2] = numbers[4];
-//	buffer[3] = numbers[1];
-//	buffer[4] = numbers[5];
-//	buffer[5] = numbers[2];
-//	buffer[7] = numbers[6];
-//
 //	*numbers = &buffer[0];
 }
 
