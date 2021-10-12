@@ -60,7 +60,7 @@ void move_numbers(uint32_t *numbers, uint8_t mode);
 /* USER CODE BEGIN 0 */
 uint32_t adc_result[11];
 uint32_t final_buffer[11] = {0};
-uint32_t adc_2_result[3] = {0};
+uint32_t adc_2_result[4] = {0};
 
 uint8_t adc_ready = 0;
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
@@ -134,7 +134,7 @@ int main(void)
 			  }
 		  }
 		  else {
-			for(uint8_t i = 0; i < 3; i++){
+			for(uint8_t i = 0; i < 4; i++){
 				HAL_ADC_PollForConversion(&hadc2, 100);
 				adc_2_result[i] = HAL_ADC_GetValue(&hadc2);
 			}
@@ -224,11 +224,13 @@ void move_numbers(uint32_t *numbers, uint8_t mode){
 		final_buffer[3] = numbers[10];
 		final_buffer[4] = numbers[4];
 		final_buffer[5] = numbers[1];
-		final_buffer[6] = 0 ;  // nope
 		final_buffer[7] = numbers[8];
 		final_buffer[9] = numbers[2];
 	}
-	else final_buffer[8] = adc_2_result[0];
+	else{
+		final_buffer[6] = adc_2_result[0];
+		final_buffer[8] = adc_2_result[1];
+	}
 //	uint32_t buffer[9] = {0};
 //	buffer[0] = numbers[3];
 //	buffer[1] = numbers[0];
