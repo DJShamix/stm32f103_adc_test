@@ -53,13 +53,14 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-void move_numbers(uint32_t *numbers);
+void move_numbers(uint32_t *numbers, uint8_t mode);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 uint32_t adc_result[11];
 uint32_t final_buffer[11] = {0};
+uint32_t adc_2_result[3] = {0};
 
 uint8_t adc_ready = 0;
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
@@ -103,6 +104,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   HAL_ADCEx_Calibration_Start(&hadc1);
+  HAL_ADCEx_Calibration_Start(&hadc2);
   HAL_Delay(100);
 
   HAL_UART_Transmit(&huart1, (uint8_t*) "Hello", 6, 150);
@@ -117,23 +119,37 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  adc_ready = 0;
-	  HAL_ADC_Start_IT(&hadc1);
-	  for(uint8_t i = 0; i < 11; i++)
-	  {
-		HAL_ADC_PollForConversion(&hadc1, 100);
-		adc_result[i] = HAL_ADC_GetValue(&hadc1);
-		asm("NOP");
+	  for(uint8_t mode = 0; mode < 2; mode++){
+		  adc_ready = 0;
+		  if(mode == 0) HAL_ADC_Start_IT(&hadc1);
+		  else 			HAL_ADC_Start_IT(&hadc2);
+
+		  if(mode == 0){
+			  for(uint8_t i = 0; i < 11; i++)
+			  {
+				HAL_ADC_PollForConversion(&hadc1, 100);
+				adc_result[i] = HAL_ADC_GetValue(&hadc1);
+
+				asm("NOP");
+			  }
+		  }
+		  else {
+			for(uint8_t i = 0; i < 3; i++){
+				HAL_ADC_PollForConversion(&hadc2, 100);
+				adc_2_result[i] = HAL_ADC_GetValue(&hadc2);
+			}
+		  }
+
+		  while(!adc_ready){
+			  int z = 0;
+			  z = z+1;
+		  }
+
+		  if(mode == 0) HAL_ADC_Stop(&hadc1);
+		  else 		    HAL_ADC_Stop(&hadc2);
+
+		  move_numbers(&adc_result[0], mode);
 	  }
-	  while(!adc_ready){
-		  int z = 0;
-		  z = z+1;
-	  }
-
-	  HAL_ADC_Stop(&hadc1);
-
-	  move_numbers(&adc_result[0]);
-
 
 	  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 //
@@ -197,20 +213,22 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-void move_numbers(uint32_t *numbers){
+void move_numbers(uint32_t *numbers, uint8_t mode){
 
 	//final_buffer[0] = adc_result[3];
 
-	final_buffer[0] = numbers[6];
-	final_buffer[1] = numbers[3];
-	final_buffer[2] = numbers[10];
-	final_buffer[3] = numbers[7];
-	final_buffer[4] = numbers[4];
-	final_buffer[5] = numbers[1];
-	final_buffer[6] = 0 ;  // nope
-	final_buffer[7] = numbers[5];
-	final_buffer[8] = numbers[2];
-
+	if(mode == 0){
+		final_buffer[0] = numbers[6];
+		final_buffer[1] = numbers[3];
+		final_buffer[2] = numbers[0];
+		final_buffer[3] = numbers[10];
+		final_buffer[4] = numbers[4];
+		final_buffer[5] = numbers[1];
+		final_buffer[6] = 0 ;  // nope
+		final_buffer[7] = numbers[8];
+		final_buffer[9] = numbers[2];
+	}
+	else final_buffer[8] = adc_2_result[0];
 //	uint32_t buffer[9] = {0};
 //	buffer[0] = numbers[3];
 //	buffer[1] = numbers[0];
