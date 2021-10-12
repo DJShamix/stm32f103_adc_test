@@ -58,8 +58,8 @@ void move_numbers(uint32_t *numbers);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint32_t adc_result[10];
-uint32_t final_buffer[10] = {0};
+uint32_t adc_result[11];
+uint32_t final_buffer[11] = {0};
 
 uint8_t adc_ready = 0;
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
@@ -99,6 +99,7 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC1_Init();
   MX_USART1_UART_Init();
+  MX_ADC2_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_ADCEx_Calibration_Start(&hadc1);
@@ -118,7 +119,7 @@ int main(void)
 
 	  adc_ready = 0;
 	  HAL_ADC_Start_IT(&hadc1);
-	  for(uint8_t i = 0; i < 10; i++)
+	  for(uint8_t i = 0; i < 11; i++)
 	  {
 		HAL_ADC_PollForConversion(&hadc1, 100);
 		adc_result[i] = HAL_ADC_GetValue(&hadc1);
@@ -200,15 +201,15 @@ void move_numbers(uint32_t *numbers){
 
 	//final_buffer[0] = adc_result[3];
 
-	final_buffer[0] = numbers[9];
+	final_buffer[0] = numbers[6];
 	final_buffer[1] = numbers[3];
-	final_buffer[2] = numbers[8];
-	final_buffer[3] = numbers[2];
-	final_buffer[4] = numbers[7];
-	final_buffer[5] = numbers[6];
-	final_buffer[6] = numbers[9]; // nope
-	final_buffer[7] = numbers[0];
-	final_buffer[8] = numbers[4];
+	final_buffer[2] = numbers[10];
+	final_buffer[3] = numbers[7];
+	final_buffer[4] = numbers[4];
+	final_buffer[5] = numbers[1];
+	final_buffer[6] = 0 ;  // nope
+	final_buffer[7] = numbers[5];
+	final_buffer[8] = numbers[2];
 
 //	uint32_t buffer[9] = {0};
 //	buffer[0] = numbers[3];
